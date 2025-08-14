@@ -32,3 +32,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Ignore other unnecessary files and folders
+.DS_Store
