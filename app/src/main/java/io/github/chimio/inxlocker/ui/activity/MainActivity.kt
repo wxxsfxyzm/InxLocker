@@ -25,10 +25,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -50,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,6 +61,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import com.highcapable.yukihookapi.YukiHookAPI
 import com.highcapable.yukihookapi.hook.factory.prefs
+import io.github.chimio.inxlocker.R
 import io.github.chimio.inxlocker.ui.activity.ui.theme.InxLockerTheme
 import io.github.chimio.inxlocker.util.Broadcasts
 
@@ -167,6 +170,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun saveInterceptUninstallEnabled(enabled: Boolean) {
+        try {
+            prefs("selected_installer_package").edit {
+                putBoolean("intercept_uninstall", enabled)
+            }
+            sendBroadcast(Intent(Broadcasts.ACTION_PREFS_UPDATED))
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun getInterceptUninstallEnabled(): Boolean {
+        return try {
+            prefs("selected_installer_package").getBoolean("intercept_uninstall", false)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -187,6 +208,7 @@ class MainActivity : ComponentActivity() {
         }
         var hideIcon by remember { mutableStateOf(getHideIconState()) }
         var debugLogEnabled by remember { mutableStateOf(getDebugLogEnabled()) }
+        var interceptUninstallEnabled by remember { mutableStateOf(getInterceptUninstallEnabled()) }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -218,7 +240,9 @@ class MainActivity : ComponentActivity() {
                             saveHideIconState(newState)
                             Toast.makeText(
                                 context,
-                                if (newState) "应用图标将被隐藏" else "应用图标将显示在桌面",
+                                if (newState) context.getString(R.string.hide_icon_enabled_toast) else context.getString(
+                                    R.string.hide_icon_disabled_toast
+                                ),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -233,7 +257,26 @@ class MainActivity : ComponentActivity() {
                             saveDebugLogEnabled(newState)
                             Toast.makeText(
                                 context,
-                                if (newState) "日志已开启" else "日志已关闭",
+                                if (newState) context.getString(R.string.debug_log_enabled_toast) else context.getString(
+                                    R.string.debug_log_disabled_toast
+                                ),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                }
+
+                item {
+                    InterceptUninstallCard(
+                        enabled = interceptUninstallEnabled,
+                        onToggle = { newState ->
+                            interceptUninstallEnabled = newState
+                            saveInterceptUninstallEnabled(newState)
+                            Toast.makeText(
+                                context,
+                                if (newState) context.getString(R.string.intercept_uninstall_enabled_toast) else context.getString(
+                                    R.string.intercept_uninstall_disabled_toast
+                                ),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -255,13 +298,21 @@ class MainActivity : ComponentActivity() {
                     selectedPackage = packageName
                     saveSelectedInstaller(packageName)
                     showInstallerDialog = false
-                    Toast.makeText(context, "已保存安装器设置", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.installer_saved),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 },
                 onClearSelection = {
                     selectedPackage = null
                     clearSelectedInstaller()
                     showInstallerDialog = false
-                    Toast.makeText(context, "已恢复默认设置", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.installer_restored),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             )
         }
@@ -301,7 +352,9 @@ class MainActivity : ComponentActivity() {
 
                 Column {
                     Text(
-                        text = if (isActive) "模块已激活" else "模块未激活",
+                        text = if (isActive) stringResource(R.string.module_status_active) else stringResource(
+                            R.string.module_status_inactive
+                        ),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = if (isActive) {
@@ -312,9 +365,9 @@ class MainActivity : ComponentActivity() {
                     )
                     Text(
                         text = if (isActive) {
-                            "InxLocker 模块正常工作中"
+                            stringResource(R.string.module_status_active_desc)
                         } else {
-                            "请在 Xposed 管理器中激活模块"
+                            stringResource(R.string.module_status_inactive_desc)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isActive) {
@@ -354,14 +407,14 @@ class MainActivity : ComponentActivity() {
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "默认安装器设置",
+                        text = stringResource(R.string.installer_settings_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
                 Text(
-                    text = "选择用于安装APK文件的默认应用程序",
+                    text = stringResource(R.string.installer_settings_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -414,12 +467,12 @@ class MainActivity : ComponentActivity() {
                             )
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "系统默认",
+                                    text = stringResource(R.string.installer_system_default),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "使用系统默认安装器",
+                                    text = stringResource(R.string.installer_system_default_desc),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -427,7 +480,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         Text(
-                            text = "点击更改",
+                            text = stringResource(R.string.installer_click_to_change),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -457,18 +510,18 @@ class MainActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = if (enabled) Icons.Filled.Check else Icons.Filled.Clear,
+                        imageVector = Icons.Filled.DateRange,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Column {
                         Text(
-                            text = "启用日志",
+                            text = stringResource(R.string.debug_log_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (enabled) "日志输出已开启" else "日志输出已关闭",
+                            text = stringResource(R.string.debug_log_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -503,18 +556,18 @@ class MainActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = if (hideIcon) Icons.Filled.Check else Icons.Filled.Clear,
+                        imageVector = Icons.Filled.Info,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Column {
                         Text(
-                            text = "隐藏应用图标",
+                            text = stringResource(R.string.hide_icon_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (hideIcon) "图标隐藏，Xposed管理器中找到" else "图标已显示在桌面",
+                            text = stringResource(R.string.hide_icon_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -523,6 +576,52 @@ class MainActivity : ComponentActivity() {
 
                 Switch(
                     checked = hideIcon,
+                    onCheckedChange = onToggle
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun InterceptUninstallCard(
+        enabled: Boolean,
+        onToggle: (Boolean) -> Unit
+    ) {
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.intercept_uninstall_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.intercept_uninstall_desc),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Switch(
+                    checked = enabled,
                     onCheckedChange = onToggle
                 )
             }
@@ -555,7 +654,7 @@ class MainActivity : ComponentActivity() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "选择默认安装器",
+                            text = stringResource(R.string.installer_selection_dialog_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -565,7 +664,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "关闭"
+                                contentDescription = stringResource(R.string.close)
                             )
                         }
                     }
@@ -580,8 +679,8 @@ class MainActivity : ComponentActivity() {
                         item {
                             InstallerItem(
                                 icon = null,
-                                label = "系统默认",
-                                packageName = "使用系统默认安装器",
+                                label = stringResource(R.string.installer_system_default),
+                                packageName = stringResource(R.string.installer_system_default_desc),
                                 isSelected = selectedPackage == null,
                                 onClick = onClearSelection
                             )
@@ -669,7 +768,7 @@ class MainActivity : ComponentActivity() {
                 if (isSelected) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "已选择",
+                        contentDescription = stringResource(R.string.selected),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -688,15 +787,13 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "使用说明",
+                    text = stringResource(R.string.instructions_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
-                    text = """确保模块已在 Xposed 框架中激活
-选择默认安装器后，系统会优先使用该应用安装APK
-可在Xposed管理器中找到应用设置""",
+                    text = stringResource(R.string.instructions_content),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4

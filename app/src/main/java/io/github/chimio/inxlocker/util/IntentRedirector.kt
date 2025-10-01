@@ -13,6 +13,7 @@ object IntentRedirector {
     }
 
     private const val ACTION_INSTALL_PACKAGE = "android.intent.action.INSTALL_PACKAGE"
+    private const val ACTION_DELETE = Intent.ACTION_DELETE
     private const val TAG = "InstallerRedirect"
 
     fun redirect(intent: Intent, tag: String = TAG) {
@@ -38,6 +39,9 @@ object IntentRedirector {
     private fun normalizeAction(intent: Intent) {
         when {
             intent.action == ACTION_INSTALL_PACKAGE -> intent.action = Intent.ACTION_VIEW
+            intent.action == ACTION_DELETE -> {
+                YLog.i(TAG, "拦截卸载Intent，重定向到指定安装器")
+            }
             intent.action.isNullOrEmpty() -> intent.action = Intent.ACTION_VIEW
         }
     }
@@ -45,5 +49,9 @@ object IntentRedirector {
     private fun logRedirection(current: Intent, tag: String) {
         YLog.i(tag, "Intent重定向:")
         YLog.i(tag, "- 目标 package: ${current.`package` ?: "<系统默认>"}")
+        YLog.i(tag, "- Intent action: ${current.action}")
+        if (current.action == ACTION_DELETE) {
+            YLog.i(tag, "- 拦截卸载Intent，重定向到指定安装器")
+        }
     }
 }

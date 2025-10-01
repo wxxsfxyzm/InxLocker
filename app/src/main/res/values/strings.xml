@@ -1,4 +1,32 @@
 <resources>
     <string name="app_name">InxLocker</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="module_status_active">模块已激活</string>
+    <string name="module_status_inactive">模块未激活</string>
+    <string name="module_status_active_desc">InxLocker 模块正常工作中</string>
+    <string name="module_status_inactive_desc">请在 Xposed 管理器中激活模块</string>
+    <string name="installer_settings_title">默认安装器设置</string>
+    <string name="installer_settings_desc">选择用于安装APK文件的默认应用程序</string>
+    <string name="installer_system_default">系统默认</string>
+    <string name="installer_system_default_desc">使用系统默认安装器</string>
+    <string name="installer_click_to_change">点击更改</string>
+    <string name="installer_selection_dialog_title">选择默认安装器</string>
+    <string name="installer_saved">已保存安装器设置</string>
+    <string name="installer_restored">已恢复默认设置</string>
+    <string name="hide_icon_title">隐藏应用图标</string>
+    <string name="hide_icon_desc">隐藏桌面图标，可在Xposed管理器中找到</string>
+    <string name="hide_icon_enabled_toast">应用图标将被隐藏</string>
+    <string name="hide_icon_disabled_toast">应用图标将显示在桌面</string>
+    <string name="debug_log_title">启用日志</string>
+    <string name="debug_log_desc">开启调试日志输出</string>
+    <string name="debug_log_enabled_toast">日志已开启</string>
+    <string name="debug_log_disabled_toast">日志已关闭</string>
+    <string name="intercept_uninstall_title">拦截卸载</string>
+    <string name="intercept_uninstall_desc">仅拦截Intent，需要安装器支持卸载</string>
+    <string name="intercept_uninstall_enabled_toast">拦截卸载已开启</string>
+    <string name="intercept_uninstall_disabled_toast">拦截卸载已关闭</string>
+    <string name="instructions_title">使用说明</string>
+    <string name="instructions_content">确保模块已在 Xposed 框架中激活\n选择默认安装器后，系统会优先使用该应用安装APK\n开启拦截卸载后，卸载操作会重定向到指定安装器\n可在Xposed管理器中找到应用设置</string>
+    <string name="close">关闭</string>
+    <string name="selected">已选择</string>
 </resources>

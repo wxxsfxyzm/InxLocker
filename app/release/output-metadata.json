@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 8,
-      "versionName": "1.2",
-      "outputFile": "InxLocker_1.2(8).apk"
+      "versionCode": 9,
+      "versionName": "1.3",
+      "outputFile": "InxLocker_1.3(9).apk"
     }
   ],
   "elementType": "File",
@@ -22,14 +22,14 @@
       "minApi": 28,
       "maxApi": 30,
       "baselineProfiles": [
-        "baselineProfiles/1/InxLocker_1.2(8).dm"
+        "baselineProfiles/1/InxLocker_1.3(9).dm"
       ]
     },
     {
       "minApi": 31,
       "maxApi": 2147483647,
       "baselineProfiles": [
-        "baselineProfiles/0/InxLocker_1.2(8).dm"
+        "baselineProfiles/0/InxLocker_1.3(9).dm"
       ]
     }
   ],

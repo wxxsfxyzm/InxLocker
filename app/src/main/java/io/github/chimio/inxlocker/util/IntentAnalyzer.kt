@@ -23,6 +23,13 @@ object IntentAnalyzer {
 
             if (mimeTypeFromIntent(intent) || hasValidAction(intent) || mimeTypeFromCIntentData(intent)) {
                 if (!hasSpecificComponent(intent)) {
+                    if (intent.action == Intent.ACTION_DELETE) {
+                        if (PrefsProvider.getBoolean("intercept_uninstall", false)) {
+                            return Result.ShouldRedirect
+                        } else {
+                            return Result.ShouldNotRedirect
+                        }
+                    }
                     return Result.ShouldRedirect
                 }
             }
@@ -34,7 +41,8 @@ object IntentAnalyzer {
 
     private fun hasValidAction(intent: Intent): Boolean {
         return intent.action in listOf(
-            "android.intent.action.INSTALL_PACKAGE")
+            "android.intent.action.INSTALL_PACKAGE",
+            Intent.ACTION_DELETE)
     }
 
     private fun mimeTypeFromIntent(intent: Intent): Boolean {
