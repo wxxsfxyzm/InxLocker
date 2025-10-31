@@ -42,6 +42,7 @@ object IntentAnalyzer {
     private fun hasValidAction(intent: Intent): Boolean {
         return intent.action in listOf(
             "android.intent.action.INSTALL_PACKAGE",
+            "android.content.pm.action.CONFIRM_INSTALL",
             Intent.ACTION_DELETE)
     }
 
