@@ -14,20 +14,22 @@ object IntentAnalyzer {
             val TAG = "IntentAnalyzer"
             val original = IntentSnapshot.capture(intent)
 
-            YLog.d(TAG,"Intent action: ${original.action}")
-            YLog.d(TAG,"Intent component: ${original.component}")
-            YLog.d(TAG,"package: ${original.packageName}")
-            YLog.d(TAG,"Intent type: ${intent.type}")
-            YLog.d(TAG,"Intent data: ${intent.data}")
-            YLog.d(TAG,"Intent clipData: ${intent.clipData}")
+            YLog.d(TAG, "Intent action: ${original.action}")
+            YLog.d(TAG, "Intent component: ${original.component}")
+            YLog.d(TAG, "package: ${original.packageName}")
+            YLog.d(TAG, "Intent type: ${intent.type}")
+            YLog.d(TAG, "Intent data: ${intent.data}")
+            YLog.d(TAG, "Intent clipData: ${intent.clipData}")
 
             if (mimeTypeFromIntent(intent) || hasValidAction(intent) || mimeTypeFromCIntentData(intent)) {
                 if (!hasSpecificComponent(intent)) {
-                    if (intent.action == Intent.ACTION_DELETE) {
-                        if (PrefsProvider.getBoolean("intercept_uninstall", false)) {
-                            return Result.ShouldRedirect
+                    if (intent.action == Intent.ACTION_DELETE ||
+                        intent.action == Intent.ACTION_UNINSTALL_PACKAGE
+                    ) {
+                        return if (PrefsProvider.getBoolean("intercept_uninstall", false)) {
+                            Result.ShouldRedirect
                         } else {
-                            return Result.ShouldNotRedirect
+                            Result.ShouldNotRedirect
                         }
                     }
                     return Result.ShouldRedirect
@@ -41,17 +43,21 @@ object IntentAnalyzer {
 
     private fun hasValidAction(intent: Intent): Boolean {
         return intent.action in listOf(
-            "android.intent.action.INSTALL_PACKAGE",
-            Intent.ACTION_DELETE)
+            Intent.ACTION_INSTALL_PACKAGE,
+            "android.content.pm.action.CONFIRM_INSTALL",
+            Intent.ACTION_UNINSTALL_PACKAGE,
+            Intent.ACTION_DELETE
+        )
     }
 
     private fun mimeTypeFromIntent(intent: Intent): Boolean {
         return intent.type == "application/vnd.android.package-archive"
     }
-//字符串分析大法，不优雅，但是好像没什么问题
+
+    //字符串分析大法，不优雅，但是好像没什么问题
     private fun mimeTypeFromCIntentData(intent: Intent): Boolean {
         val uri = intent.data.toString()
-        return (uri.endsWith(".apk") || uri.endsWith(".apks")|| uri.endsWith(".apk.1")) &&
+        return (uri.endsWith(".apk") || uri.endsWith(".apks") || uri.endsWith(".apk.1")) &&
                 (uri.startsWith("file://") || uri.startsWith("content://"))
     }
 
