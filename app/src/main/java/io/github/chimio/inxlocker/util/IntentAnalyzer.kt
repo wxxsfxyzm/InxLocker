@@ -8,37 +8,39 @@ object IntentAnalyzer {
         object ShouldRedirect : Result()
         object ShouldNotRedirect : Result()
     }
+    fun analyze(intent: Intent): Result = runCatching {
+        val TAG = "IntentAnalyzer"
+        val original = IntentSnapshot.capture(intent)
 
-    fun analyze(intent: Intent): Result {
-        return try {
-            val TAG = "IntentAnalyzer"
-            val original = IntentSnapshot.capture(intent)
+        YLog.d(TAG, "Intent action: ${original.action}")
+        YLog.d(TAG, "Intent component: ${original.component}")
+        YLog.d(TAG, "package: ${original.packageName}")
+        YLog.d(TAG, "Intent type: ${intent.type}")
+        YLog.d(TAG, "Intent data: ${intent.data}")
+        YLog.d(TAG, "Intent clipData: ${intent.clipData}")
 
-            YLog.d(TAG, "Intent action: ${original.action}")
-            YLog.d(TAG, "Intent component: ${original.component}")
-            YLog.d(TAG, "package: ${original.packageName}")
-            YLog.d(TAG, "Intent type: ${intent.type}")
-            YLog.d(TAG, "Intent data: ${intent.data}")
-            YLog.d(TAG, "Intent clipData: ${intent.clipData}")
+        if (intent.action !in allowedActions) return Result.ShouldNotRedirect
 
-            if (mimeTypeFromIntent(intent) || hasValidAction(intent) || mimeTypeFromCIntentData(intent)) {
-                if (!hasSpecificComponent(intent)) {
-                    if (intent.action == Intent.ACTION_DELETE ||
-                        intent.action == Intent.ACTION_UNINSTALL_PACKAGE
-                    ) {
-                        return if (PrefsProvider.getBoolean("intercept_uninstall", false)) {
-                            Result.ShouldRedirect
-                        } else {
-                            Result.ShouldNotRedirect
-                        }
+        // 判断是否命中重定向条件
+        intent.takeIf {
+            mimeTypeFromIntent(it) || hasValidAction(it) || mimeTypeFromCIntentData(it)
+        }?.takeIf {
+            !hasSpecificComponent(it)
+        }?.run {
+            when (action) {
+                Intent.ACTION_DELETE,
+                Intent.ACTION_UNINSTALL_PACKAGE -> {
+                    if (PrefsProvider.getBoolean("intercept_uninstall", false)) {
+                        Result.ShouldRedirect
+                    } else {
+                        Result.ShouldNotRedirect
                     }
-                    return Result.ShouldRedirect
                 }
+                else -> Result.ShouldRedirect
             }
-            Result.ShouldNotRedirect
-        } catch (_: Exception) {
-            Result.ShouldNotRedirect
-        }
+        } ?: Result.ShouldNotRedirect
+    }.getOrElse {
+        Result.ShouldNotRedirect
     }
 
     private fun hasValidAction(intent: Intent): Boolean {
@@ -56,7 +58,7 @@ object IntentAnalyzer {
 
     //字符串分析大法，不优雅，但是好像没什么问题
     private fun mimeTypeFromCIntentData(intent: Intent): Boolean {
-        val uri = intent.data.toString()
+        val uri = intent.data?.toString().orEmpty()
         return (uri.endsWith(".apk") || uri.endsWith(".apks") || uri.endsWith(".apk.1")) &&
                 (uri.startsWith("file://") || uri.startsWith("content://"))
     }
@@ -64,4 +66,13 @@ object IntentAnalyzer {
     private fun hasSpecificComponent(intent: Intent): Boolean {
         return intent.component != null
     }
+
+
+    private val allowedActions = listOf(
+        Intent.ACTION_VIEW,
+        Intent.ACTION_INSTALL_PACKAGE,
+        "android.content.pm.action.CONFIRM_INSTALL",
+        Intent.ACTION_UNINSTALL_PACKAGE,
+        Intent.ACTION_DELETE
+    )
 }

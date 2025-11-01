@@ -24,23 +24,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,6 +61,10 @@ import com.highcapable.yukihookapi.YukiHookAPI
 import com.highcapable.yukihookapi.hook.factory.prefs
 import io.github.chimio.inxlocker.R
 import io.github.chimio.inxlocker.ui.activity.ui.theme.InxLockerTheme
+import io.github.chimio.inxlocker.ui.widget.SettingsGroup
+import io.github.chimio.inxlocker.ui.widget.SettingsItem
+import io.github.chimio.inxlocker.ui.widget.SwitchGroup
+import io.github.chimio.inxlocker.ui.widget.SwitchItem
 import io.github.chimio.inxlocker.util.Broadcasts
 
 data class InstallerApp(
@@ -209,6 +211,7 @@ class MainActivity : ComponentActivity() {
         var hideIcon by remember { mutableStateOf(getHideIconState()) }
         var debugLogEnabled by remember { mutableStateOf(getDebugLogEnabled()) }
         var interceptUninstallEnabled by remember { mutableStateOf(getInterceptUninstallEnabled()) }
+        val selectedInstaller = installerList.find { it.packageName == selectedPackage }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -226,60 +229,78 @@ class MainActivity : ComponentActivity() {
                 }
 
                 item {
-                    InstallerSelectorCard(
-                        selectedPackage = selectedPackage,
-                        onShowDialog = { showInstallerDialog = true }
+                    SettingsGroup(
+                        title = stringResource(R.string.installer_settings_title),
+                        items = listOf(
+                            SettingsItem(
+                                icon = if (selectedInstaller == null) Icons.Default.Build else null,
+                                drawableIcon = selectedInstaller?.icon,
+                                title = selectedInstaller?.label
+                                    ?: stringResource(R.string.installer_system_default),
+                                subtitle = selectedInstaller?.packageName
+                                    ?: stringResource(R.string.installer_system_default_desc),
+                                onClick = { showInstallerDialog = true }
+                            )
+                        )
                     )
                 }
 
                 item {
-                    HideIconCard(
-                        hideIcon = hideIcon,
-                        onToggle = { newState ->
-                            hideIcon = newState
-                            saveHideIconState(newState)
-                            Toast.makeText(
-                                context,
-                                if (newState) context.getString(R.string.hide_icon_enabled_toast) else context.getString(
-                                    R.string.hide_icon_disabled_toast
-                                ),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
-                }
-
-                item {
-                    DebugLogCard(
-                        enabled = debugLogEnabled,
-                        onToggle = { newState ->
-                            debugLogEnabled = newState
-                            saveDebugLogEnabled(newState)
-                            Toast.makeText(
-                                context,
-                                if (newState) context.getString(R.string.debug_log_enabled_toast) else context.getString(
-                                    R.string.debug_log_disabled_toast
-                                ),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
-                }
-
-                item {
-                    InterceptUninstallCard(
-                        enabled = interceptUninstallEnabled,
-                        onToggle = { newState ->
-                            interceptUninstallEnabled = newState
-                            saveInterceptUninstallEnabled(newState)
-                            Toast.makeText(
-                                context,
-                                if (newState) context.getString(R.string.intercept_uninstall_enabled_toast) else context.getString(
-                                    R.string.intercept_uninstall_disabled_toast
-                                ),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                    SwitchGroup(
+                        title = stringResource(R.string.settings),
+                        items = listOf(
+                            SwitchItem(
+                                icon = Icons.Default.Info,
+                                title = stringResource(R.string.hide_icon_title),
+                                subtitle = stringResource(R.string.hide_icon_desc),
+                                isChecked = hideIcon,
+                                onCheckedChange = { newState ->
+                                    hideIcon = newState
+                                    saveHideIconState(newState)
+                                    Toast.makeText(
+                                        context,
+                                        if (newState) context.getString(R.string.hide_icon_enabled_toast) else context.getString(
+                                            R.string.hide_icon_disabled_toast
+                                        ),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            ),
+                            SwitchItem(
+                                icon = Icons.Default.DateRange,
+                                title = stringResource(R.string.debug_log_title),
+                                subtitle = stringResource(R.string.debug_log_desc),
+                                isChecked = debugLogEnabled,
+                                onCheckedChange = { newState ->
+                                    debugLogEnabled = newState
+                                    saveDebugLogEnabled(newState)
+                                    Toast.makeText(
+                                        context,
+                                        if (newState) context.getString(R.string.debug_log_enabled_toast) else context.getString(
+                                            R.string.debug_log_disabled_toast
+                                        ),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            ),
+                            SwitchItem(
+                                icon = Icons.Default.Delete,
+                                title = stringResource(R.string.intercept_uninstall_title),
+                                subtitle = stringResource(R.string.intercept_uninstall_desc),
+                                isChecked = interceptUninstallEnabled,
+                                onCheckedChange = { newState ->
+                                    interceptUninstallEnabled = newState
+                                    saveInterceptUninstallEnabled(newState)
+                                    Toast.makeText(
+                                        context,
+                                        if (newState) context.getString(R.string.intercept_uninstall_enabled_toast) else context.getString(
+                                            R.string.intercept_uninstall_disabled_toast
+                                        ),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                        )
                     )
                 }
 
@@ -322,8 +343,9 @@ class MainActivity : ComponentActivity() {
     private fun ModuleStatusCard() {
         val isActive = YukiHookAPI.Status.isModuleActive
 
-        ElevatedCard(
+        Card(
             modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
                 containerColor = if (isActive) {
                     MaterialTheme.colorScheme.primaryContainer
@@ -331,6 +353,7 @@ class MainActivity : ComponentActivity() {
                     MaterialTheme.colorScheme.errorContainer
                 }
             ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -382,253 +405,6 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun InstallerSelectorCard(
-        selectedPackage: String?,
-        onShowDialog: () -> Unit
-    ) {
-        val installerList = remember { getApkInstallerApps() }
-        val selectedInstaller = installerList.find { it.packageName == selectedPackage }
-
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = stringResource(R.string.installer_settings_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Text(
-                    text = stringResource(R.string.installer_settings_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onShowDialog() },
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (selectedInstaller != null) {
-                            val d = selectedInstaller.icon
-                            val w = if (d.intrinsicWidth > 0) d.intrinsicWidth else 128
-                            val h = if (d.intrinsicHeight > 0) d.intrinsicHeight else 128
-                            Image(
-                                bitmap = d.toBitmap(w, h).asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp),
-                                contentScale = ContentScale.Fit
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = selectedInstaller.label,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = selectedInstaller.packageName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        } else {
-                            Icon(
-                                imageVector = Icons.Filled.Build,
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.installer_system_default),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = stringResource(R.string.installer_system_default_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Text(
-                            text = stringResource(R.string.installer_click_to_change),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    @Composable
-    private fun DebugLogCard(
-        enabled: Boolean,
-        onToggle: (Boolean) -> Unit
-    ) {
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.DateRange,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Column {
-                        Text(
-                            text = stringResource(R.string.debug_log_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.debug_log_desc),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Switch(
-                    checked = enabled,
-                    onCheckedChange = onToggle
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun HideIconCard(
-        hideIcon: Boolean,
-        onToggle: (Boolean) -> Unit
-    ) {
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Column {
-                        Text(
-                            text = stringResource(R.string.hide_icon_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.hide_icon_desc),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Switch(
-                    checked = hideIcon,
-                    onCheckedChange = onToggle
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun InterceptUninstallCard(
-        enabled: Boolean,
-        onToggle: (Boolean) -> Unit
-    ) {
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Column {
-                        Text(
-                            text = stringResource(R.string.intercept_uninstall_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.intercept_uninstall_desc),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Switch(
-                    checked = enabled,
-                    onCheckedChange = onToggle
-                )
-            }
-        }
-    }
-
-    @Composable
     private fun InstallerSelectionDialog(
         installerList: List<InstallerApp>,
         selectedPackage: String?,
@@ -640,10 +416,12 @@ class MainActivity : ComponentActivity() {
             onDismissRequest = onDismiss,
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            ElevatedCard(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .fillMaxHeight(0.7f),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)  // 去掉阴影
             ) {
                 Column {
                     Row(
@@ -711,14 +489,23 @@ class MainActivity : ComponentActivity() {
         isSelected: Boolean,
         onClick: () -> Unit
     ) {
-        ElevatedCard(
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onClick() },
+                .fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSelected) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                }
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onClick() }
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -779,8 +566,14 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun InstructionCard() {
-        ElevatedCard(
+        val context = this@MainActivity
+        Card(
             modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -798,6 +591,52 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4
                 )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                val url = context.getString(R.string.github_url)
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {
+
+                                }
+                            }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.view_source_code),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.source_code_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         }
     }
