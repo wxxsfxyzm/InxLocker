@@ -32,7 +32,7 @@ object IntentRedirector {
         if (!targetPackage.isNullOrBlank()) {
             intent.component = null
             intent.setPackage(targetPackage)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         normalizeAction(intent)
     }
@@ -43,6 +43,7 @@ object IntentRedirector {
             intent.action == ACTION_DELETE || intent.action == ACTION_UNINSTALL_PACKAGE -> {
                 YLog.i(TAG, "拦截卸载Intent，重定向到指定安装器")
             }
+
             intent.action.isNullOrEmpty() -> intent.action = Intent.ACTION_VIEW
         }
     }
